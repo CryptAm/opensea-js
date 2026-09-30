@@ -19,6 +19,9 @@ jobs:
       - run: npm run build
       - run: npm run lint
       - run: npm run check-types
+      # Every tsconfig sets skipLibCheck, so an error inside a shipped .d.ts only
+      # shows up for a consumer who turns it off. This is that consumer.
+      - run: node scripts/check-consumer-declarations.mjs
       - run: npm test
         env:
           OPENSEA_API_KEY: ${{ secrets.OPENSEA_API_KEY }}

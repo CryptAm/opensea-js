@@ -6,6 +6,7 @@ import {
 } from "../../src/constants"
 import {
   decodeTokenIds,
+  hasErrorCode,
   remapSharedStorefrontAddress,
 } from "../../src/utils/utils"
 import { BAYC_CONTRACT_ADDRESS } from "../utils/constants"
@@ -170,6 +171,18 @@ describe("SDK: misc", () => {
         "10000000000000000000000001",
         "10000000000000000000000002",
       ])
+    })
+  })
+
+  describe("hasErrorCode", () => {
+    test("is true only when the error carries a code", () => {
+      expect(hasErrorCode({ code: "CALL_EXCEPTION" })).toBe(true)
+      expect(hasErrorCode(new Error("boom"))).toBe(false)
+    })
+
+    test("is false for null and undefined instead of throwing", () => {
+      expect(hasErrorCode(null)).toBe(false)
+      expect(hasErrorCode(undefined)).toBe(false)
     })
   })
 })

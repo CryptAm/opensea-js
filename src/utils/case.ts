@@ -83,6 +83,12 @@ function camelToSnake(key: string): string {
   )
 }
 
+// `Uppercase` is the identity on digits and `_`, so `Ch extends Uppercase<Ch>`
+// would read them as capitals. `Lowercase` only changes letters the runtime
+// `/[A-Z]/` also matches (plus non-ASCII capitals, which keys don't use).
+type IsUppercaseLetter<Ch extends string> =
+  Ch extends Lowercase<Ch> ? false : true
+
 /**
  * Maps a camelCase string literal to snake_case at the type level.
  * `"isNsfw"` → `"is_nsfw"`. The inverse of {@link Camelize}.
@@ -93,13 +99,13 @@ function camelToSnake(key: string): string {
  */
 type CamelToSnakeInner<S extends string> =
   S extends `${infer Head}${infer Tail}`
-    ? Head extends Uppercase<Head>
+    ? IsUppercaseLetter<Head> extends true
       ? `_${Lowercase<Head>}${CamelToSnakeInner<Tail>}`
       : `${Head}${CamelToSnakeInner<Tail>}`
     : S
 
 type CamelToSnake<S extends string> = S extends `${infer Head}${infer Tail}`
-  ? Head extends Uppercase<Head>
+  ? IsUppercaseLetter<Head> extends true
     ? `${Lowercase<Head>}${CamelToSnakeInner<Tail>}`
     : `${Head}${CamelToSnakeInner<Tail>}`
   : S

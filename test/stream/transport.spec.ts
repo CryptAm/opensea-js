@@ -575,6 +575,37 @@ describe("server-side filter widening", () => {
 
     transport.disconnect()
   })
+
+  test("a late reply for the join a widen replaced does not fire onSubscribed again", async () => {
+    const transport = makeTransport()
+    transport.connect()
+    await flushMicrotasks()
+
+    const onSubscribedSold = vi.fn()
+    const onSubscribedListed = vi.fn()
+    transport.subscribe(
+      "collection:c1",
+      { eventTypes: [EventType.ITEM_SOLD] },
+      { onSubscribed: onSubscribedSold },
+    )
+    transport.subscribe(
+      "collection:c1",
+      { eventTypes: [EventType.ITEM_LISTED] },
+      { onSubscribed: onSubscribedListed },
+    )
+    const [replacedJoin, currentJoin] = server.framesOfType("phx_join")
+
+    server.send(
+      encodeReply({ ref: currentJoin[1] as string, topic: "collection:c1" }),
+    )
+    server.send(
+      encodeReply({ ref: replacedJoin[1] as string, topic: "collection:c1" }),
+    )
+
+    expect(onSubscribedSold).toHaveBeenCalledTimes(1)
+    expect(onSubscribedListed).toHaveBeenCalledTimes(1)
+    transport.disconnect()
+  })
 })
 
 describe("unsubscribe acknowledgement", () => {
@@ -592,6 +623,23 @@ describe("unsubscribe acknowledgement", () => {
     server.send(encodeReply({ ref: ref as string, topic }))
 
     expect(onUnsubscribed).toHaveBeenCalledTimes(1)
+    transport.disconnect()
+  })
+
+  test("a join answered after the unsubscribe does not fire onSubscribed", async () => {
+    const transport = makeTransport()
+    transport.connect()
+    await flushMicrotasks()
+
+    const onSubscribed = vi.fn()
+    const subscription = transport.subscribe("collection:c1", undefined, {
+      onSubscribed,
+    })
+    subscription.unsubscribe()
+    const [, joinRef, topic] = server.framesOfType("phx_join")[0]
+    server.send(encodeReply({ ref: joinRef as string, topic }))
+
+    expect(onSubscribed).not.toHaveBeenCalled()
     transport.disconnect()
   })
 

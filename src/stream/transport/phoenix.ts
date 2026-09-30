@@ -446,6 +446,11 @@ export class PhoenixChannelsTransport implements StreamTransport {
   }
 
   private sendJoin(subscription: PhoenixSubscription): void {
+    // A widen or rejoin can replace a join the server has not answered yet.
+    // Its late reply would otherwise fire every subscriber's callback again.
+    if (subscription.joinRef !== null) {
+      this.cancelPendingReply(subscription.joinRef)
+    }
     const ref = this.nextRef()
     subscription.joinRef = ref
     const payload = subscription.eventTypes
@@ -602,6 +607,7 @@ export class PhoenixChannelsTransport implements StreamTransport {
       onUnsubscribed?.()
       return
     }
+    this.cancelPendingReply(subscription.joinRef)
 
     // Fire at most once, whichever of reply, timeout, or disconnect wins.
     let settled = false
@@ -735,6 +741,15 @@ export class PhoenixChannelsTransport implements StreamTransport {
       )
     }, this.timeout)
     this.pendingReplies.set(ref, { handler, timer })
+  }
+
+  private cancelPendingReply(ref: string): void {
+    const pending = this.pendingReplies.get(ref)
+    if (!pending) {
+      return
+    }
+    clearTimeout(pending.timer)
+    this.pendingReplies.delete(ref)
   }
 
   /**

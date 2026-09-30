@@ -174,6 +174,26 @@ describe("Snakeize<T>", () => {
     type Out = Snakeize<In>
     expectTypeOf<Out>().toEqualTypeOf<{ my_key: number }>()
   })
+
+  test("no underscore before a digit, matching the runtime", () => {
+    type Out = Snakeize<{ chain2Id: string; erc721TokenId: string }>
+    expectTypeOf<Out>().toEqualTypeOf<{
+      chain2_id: string
+      erc721_token_id: string
+    }>()
+    expect(snakeizeKeysDeep({ chain2Id: "1", erc721TokenId: "2" })).toEqual({
+      chain2_id: "1",
+      erc721_token_id: "2",
+    })
+  })
+
+  test("an already snake_case key keeps a single underscore", () => {
+    type Out = Snakeize<{ order_hash: string }>
+    expectTypeOf<Out>().toEqualTypeOf<{ order_hash: string }>()
+    expect(snakeizeKeysDeep({ order_hash: "0x1" })).toEqual({
+      order_hash: "0x1",
+    })
+  })
 })
 
 describe("Camelize<T>", () => {

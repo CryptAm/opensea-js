@@ -1,5 +1,13 @@
 # @opensea/sdk
 
+## 12.11.1
+
+### Patch Changes
+
+- 5ed79af: `hasErrorCode` returns `false` for `null` and `undefined` instead of throwing a `TypeError`.
+- 5ed79af: `Snakeize<T>` no longer puts an underscore before digits or doubles an existing underscore, so it matches what `snakeizeKeysDeep` writes at runtime (`chain2Id` is `chain2_id`, `order_hash` stays `order_hash`).
+- 5ed79af: Stream transport: a join reply that arrives after the join was replaced (filter widen, rejoin) or after the topic was unsubscribed no longer fires `onSubscribed` or `onSubscribeError` again.
+
 ## 12.11.0
 
 ### Minor Changes

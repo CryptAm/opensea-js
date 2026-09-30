@@ -10,6 +10,8 @@ interface ErrorWithCode extends Error {
 }
 
 export const hasErrorCode = (error: unknown): error is ErrorWithCode => {
-  const untypedError = error as Partial<ErrorWithCode>
-  return !!untypedError.code
+  if (error === null || error === undefined) {
+    return false
+  }
+  return !!(error as Partial<ErrorWithCode>).code
 }
